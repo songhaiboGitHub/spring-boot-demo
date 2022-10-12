@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.*;
@@ -47,25 +48,25 @@ public class AopLog {
     }
 
     @Before("log()")
-    public void before() {
+    public void doBefore(JoinPoint joinPoint) {
         log.info("before  环绕操作完 调用方法前执行......");
 
     }
 
     @After("log()")
-    public void after() {
+    public void doAfter() {
         log.info("after  环绕操作完 调用方法后执行......");
 
     }
 
     @AfterThrowing("log()")
-    public void afterThrowing() {
+    public void doAfterThrowing() {
         log.info("afterThrowing  环绕操作完 调用方法后异常执行......");
 
     }
 
     @AfterReturning("log()")
-    public void AfterReturning() {
+    public void doAfterReturning() {
         log.info("afterReturning  环绕操作完 调用方法返回值后执行......");
 
     }
@@ -108,7 +109,6 @@ public class AopLog {
             .os(userAgent.getOperatingSystem().toString()).build();
 
         log.info("Request Log Info : {}", JSONUtil.toJsonStr(l));
-
         return result;
     }
 
