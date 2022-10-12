@@ -11,9 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -44,9 +42,35 @@ public class AopLog {
      */
     @Pointcut("execution(public * com.xkcoding.log.aop.controller.*Controller.*(..))")
     public void log() {
-        log.info("切入点......");
+        //切入点......
 
     }
+
+    @Before("log()")
+    public void before() {
+        log.info("before  环绕操作完 调用方法前执行......");
+
+    }
+
+    @After("log()")
+    public void after() {
+        log.info("after  环绕操作完 调用方法后执行......");
+
+    }
+
+    @AfterThrowing("log()")
+    public void afterThrowing() {
+        log.info("afterThrowing  环绕操作完 调用方法后异常执行......");
+
+    }
+
+    @AfterReturning("log()")
+    public void AfterReturning() {
+        log.info("afterReturning  环绕操作完 调用方法返回值后执行......");
+
+    }
+
+
 
     /**
      * 环绕操作

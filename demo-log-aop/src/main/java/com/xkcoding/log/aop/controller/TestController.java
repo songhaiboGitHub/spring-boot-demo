@@ -47,4 +47,16 @@ public class TestController {
         log.info(jsonStr);
         return Dict.create().set("json", map);
     }
+
+    /**
+     * 异常测试方法
+     *
+     * @param who 测试参数
+     * @return {@link Dict}
+     */
+    @GetMapping("/testError")
+    public Dict testError(String who) {
+        log.info(who);
+        throw new RuntimeException();
+    }
 }
