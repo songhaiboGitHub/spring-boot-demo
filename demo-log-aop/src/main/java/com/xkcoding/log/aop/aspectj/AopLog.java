@@ -44,6 +44,7 @@ public class AopLog {
      */
     @Pointcut("execution(public * com.xkcoding.log.aop.controller.*Controller.*(..))")
     public void log() {
+        log.info("切入点......");
 
     }
 
