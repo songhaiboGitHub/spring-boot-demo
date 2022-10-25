@@ -8,16 +8,16 @@ MAINTAINER "songhaibo 594859595@qq.com"
 VOLUME /tmp
 
 # 暴露8080端口
-EXPOSE 8080
+# EXPOSE 8080
 
 # 添加变量，如果使用dockerfile-maven-plugin，则会自动替换这里的变量内容
-ARG JAR_FILE=target/demo-cache-redis.jar
+# ARG JAR_FILE=target/demo-cache-redis.jar
 
 # 往容器中添加jar包
-ADD ${JAR_FILE} app.jar
+# ADD ${JAR_FILE} app.jar
 
 #  往容器中添加jar包
-# copy target/*.jar /app.jar
+copy target/*.jar /app.jar
 
 # 启动镜像自动运行程序
 ENTRYPOINT ["java","-jar","/app.jar"]
