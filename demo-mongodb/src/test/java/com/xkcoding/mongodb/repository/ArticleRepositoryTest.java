@@ -18,6 +18,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -59,7 +60,8 @@ public class ArticleRepositoryTest extends SpringBootDemoMongodbApplicationTests
         for (int i = 0; i < 10; i++) {
             articles.add(new Article(snowflake.nextId(), RandomUtil.randomString(20), RandomUtil.randomString(150), DateUtil.date(), DateUtil.date(), 0L, 0L));
         }
-        articleRepo.saveAll(articles);
+        mongoTemplate.insertAll(articles);
+//        articleRepo.saveAll(articles);
 
         log.info("【articles】= {}", JSONUtil.toJsonStr(articles.stream().map(Article::getId).collect(Collectors.toList())));
     }
@@ -70,8 +72,9 @@ public class ArticleRepositoryTest extends SpringBootDemoMongodbApplicationTests
     @Test
     public void testUpdate() {
         articleRepo.findById(1L).ifPresent(article -> {
-            article.setTitle(article.getTitle() + "更新之后的标题");
-            article.setUpdateTime(DateUtil.date());
+            article.setTitle(article.getTitle() + "更新之后的标题111");
+            article.setUpdateTime(new Date());
+            article.setVisits(1L);
             articleRepo.save(article);
             log.info("【article】= {}", JSONUtil.toJsonStr(article));
         });
@@ -112,6 +115,7 @@ public class ArticleRepositoryTest extends SpringBootDemoMongodbApplicationTests
         Update update = new Update();
         update.inc("thumbUp", 1L);
         update.inc("visits", 1L);
+        update.currentDate("updateTime");
         mongoTemplate.updateFirst(query, update, "article");
 
         articleRepo.findById(1L).ifPresent(article -> log.info("【标题】= {}【点赞数】= {}【访客数】= {}", article.getTitle(), article.getThumbUp(), article.getVisits()));
