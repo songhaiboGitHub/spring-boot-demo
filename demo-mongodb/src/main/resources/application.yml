@@ -1,9 +1,8 @@
 spring:
   data:
     mongodb:
-      host: localhost
-      port: 27017
-      database: article_db
+     uri: mongodb://admin:123456@119.3.161.167:27017/test?authSource=admin
+
 logging:
   level:
     org.springframework.data.mongodb.core: debug
