@@ -6,17 +6,22 @@ import com.google.common.collect.Lists;
 import com.xkcoding.mongodb.SpringBootDemoMongodbApplicationTests;
 import com.xkcoding.mongodb.model.ImagePO;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.junit.Test;
-import org.junit.platform.commons.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.util.ObjectUtils;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,7 +64,7 @@ public class ImgeRepositoryTest extends SpringBootDemoMongodbApplicationTests {
         imagePO.setSize(10);
         imagePO.setFarmId("农场id");
         imagePO.setFieldIds("地块id");
-        ImagePO insert = mongoTemplate.insert(imagePO,"equipmentImageInfo");
+        ImagePO insert = mongoTemplate.insert(imagePO, "equipmentImageInfo");
         log.info("【article】= {}", JSONUtil.toJsonStr(insert));
     }
 
@@ -90,7 +95,6 @@ public class ImgeRepositoryTest extends SpringBootDemoMongodbApplicationTests {
         log.info("【articles】= {}", JSONUtil.toJsonStr(imagePOS.stream().map(ImagePO::getId).collect(Collectors.toList())));
     }
 
-
     /**
      * 测试分页排序查询
      */
@@ -98,13 +102,13 @@ public class ImgeRepositoryTest extends SpringBootDemoMongodbApplicationTests {
     public void testQuery() {
 
         Criteria criteria = Criteria.where("equipmentNum").in(Arrays.asList("G28206747"));
-            criteria.and("type").is("0");
+        criteria.and("type").is("0");
 
         String format_DateTime = "yyyy-MM-dd HH:mm:ss";
         DateTimeFormatter df = DateTimeFormatter.ofPattern(format_DateTime);
         LocalDateTime localDateTime = LocalDateTime.parse("2023-11-23 12:13:08", df);
         //创建时间  开始时间  结束时间
-            criteria = criteria.and("time").lte(localDateTime);
+        criteria = criteria.and("time").lte(localDateTime);
 //        if (dto.getTimeBeg() != null && dto.getTimeEnd() != null) {
 //            criteria.andOperator(
 //                Criteria.where("time").gte("2021-01-01 12:12:12"),
@@ -127,6 +131,39 @@ public class ImgeRepositoryTest extends SpringBootDemoMongodbApplicationTests {
         log.info("【总页数】= {}", list);
     }
 
+    /**
+     * 测试聚合
+     */
+    @Test
+    public void testAggregation() {
+        String format_DateTime = "yyyy-MM-dd HH:mm:ss";
+        DateTimeFormatter df = DateTimeFormatter.ofPattern(format_DateTime);
+        LocalDateTime localDateTime = LocalDateTime.parse("2023-11-23 12:13:08", df);
 
+        LocalDateTime endTime = LocalDateTime.parse("2022-11-23 12:13:08", df);
+
+//        Query query = new Query();
+//        query.fields().exclude("_id");
+        Criteria criteria = Criteria.where("name").is("a");
+//        criteria.andOperator(
+//            Criteria.where("time").gte(localDateTime),
+//            Criteria.where("time").lte(endTime));
+//        query.addCriteria(criteria);
+
+        AggregationOperation match = Aggregation.match(criteria);
+        //后续可以考虑关联产品模型表
+        List<AggregationOperation> operations = new ArrayList<>();
+        operations.add(match);
+        operations.add(Aggregation.group("sex")/*.first("equipmentId").as("equipmentId")*/
+            .sum("sex").as("sex")
+            .sum("age").as("age")
+        );
+        Aggregation aggregation = Aggregation.newAggregation(operations);
+        AggregationResults<Document> aggregate = mongoTemplate.aggregate(aggregation, "c3", Document.class);
+        List<Document> mappedResults = aggregate.getMappedResults();
+        log.debug("BaBiaoChongQingCeBaoYiQuery 聚合合计查询结果 {}", JSONUtil.toJsonStr(aggregate));
+        System.out.println("-----------------" + (CollectionUtils.isEmpty(mappedResults) ? null : mappedResults.get(0)));
+        System.out.println("==============" + mappedResults);
+    }
 
 }
