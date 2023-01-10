@@ -61,6 +61,7 @@
     <module>demo-sharding-jdbc</module>
     <module>demo-tio</module>
     <module>demo-codegen</module>
+    <module>demo-git</module>
     <module>demo-graylog</module>
     <module>demo-ldap</module>
     <module>demo-dynamic-datasource</module>
@@ -87,6 +88,8 @@
     <hutool.version>5.4.5</hutool.version>
     <guava.version>29.0-jre</guava.version>
     <user.agent.version>1.20</user.agent.version>
+    <org.eclipse.jgit.version>4.4.1.201607150455-r</org.eclipse.jgit.version>
+<!--    <org.eclipse.jgit.archive.versionversion>5.8.1.202007141445-r</org.eclipse.jgit.archive.versionversion>-->
   </properties>
 
   <repositories>
@@ -141,6 +144,18 @@
         <artifactId>lombok</artifactId>
         <version>1.18.14</version>
       </dependency>
+      <dependency>
+        <groupId>org.eclipse.jgit</groupId>
+        <artifactId>org.eclipse.jgit</artifactId>
+        <version>${org.eclipse.jgit.version}</version>
+      </dependency>
+
+<!--      <dependency>-->
+<!--        <groupId>org.eclipse.jgit</groupId>-->
+<!--        <artifactId>org.eclipse.jgit.archive</artifactId>-->
+<!--        <version>${org.eclipse.jgit.archive.version}</version>-->
+<!--      </dependency>-->
+
     </dependencies>
   </dependencyManagement>
 
