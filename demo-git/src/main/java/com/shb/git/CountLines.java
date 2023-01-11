@@ -14,10 +14,9 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+
+import static java.util.stream.Collectors.groupingBy;
 
 /**
  * @author songhaibo
@@ -37,47 +36,98 @@ public class CountLines {
         Git git = Git.open(new File("/Users/songhaibo/IdeaProjects/map-iot-middleground/"));
         Repository repository = git.getRepository();
         try (RevWalk revWalk = new RevWalk(repository)) {
-//            ObjectId commitId = repository.resolve("c9879cacdddb45bd8505cfe46c364a40e041d8f4");  //这里是提交id,通过git log命令可以查看最近一次提交的commitId
+            //这里是提交id,通过git log命令可以查看最近一次提交的commitId
             ObjectId commitId = repository.resolve("7ae236fe05b7cb67d12a3cf1302a8bb891f7dd07");
             revWalk.markStart(revWalk.parseCommit(commitId));
+            List<String> monthBetweenDate = getMonthBetweenDate("2022-09-01 00:00:00", "2023-12-30 23:59:59");
             int i = 0;
-            for (RevCommit commit : revWalk) {
-                if (commit.getAuthorIdent().getWhen().getTime() < DateUtils.toDate("2022-09-00 00:00:00").getTime()) {
-                    continue;
-                }
-                RevCommit parent = null;
-                if (commit.getParent(0) != null) {
-                    parent = revWalk.parseCommit(commit.getParent(0).getId());
-                }
-
-                DiffFormatter df = new DiffFormatter(DisabledOutputStream.INSTANCE);
-                df.setRepository(repository);
-                //设置比较器忽略空白字符
-                df.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
-                df.setDetectRenames(true);
-
-                List<DiffEntry> diffs = df.scan(parent.getTree(), commit.getTree());
-                for (DiffEntry diff : diffs) {
-//                    df.format(diff);
-                    FileHeader fileHeader = df.toFileHeader(diff);
-                    List<? extends HunkHeader> hunks = fileHeader.getHunks();
-                    int addSize = 0;
-                    int subSize = 0;
-                    for (HunkHeader hunk : hunks) {
-                        EditList edits = hunk.toEditList();
-                        for (Edit edit : edits) {
-                            addSize += edit.getEndB() - edit.getBeginB();
-                            subSize += edit.getEndA() - edit.getBeginA();
+            Map<String, Object> map = new HashMap<>(16);
+            for (String date : monthBetweenDate) {
+                List<Map<String, Object>> mapArrayList = new ArrayList<>();
+                for (RevCommit commit : revWalk) {
+                    String beginTime = DateUtils.getMonthOfMinDate(DateUtils.getyyyy_mm_dd_format().parse(date + "-01")) + " 00:00:00";
+                    String endTime = DateUtils.getMonthOfMaxDate(DateUtils.getyyyy_mm_dd_format().parse(date + "-01")) + " 23:59:59";
+                    if (commit.getAuthorIdent().getWhen().getTime() >= DateUtils.toDate(beginTime).getTime() && commit.getAuthorIdent().getWhen().getTime() <= DateUtils.toDate(endTime).getTime()) {
+                        RevCommit parent = null;
+                        if (commit.getParent(0) != null) {
+                            parent = revWalk.parseCommit(commit.getParent(0).getId());
                         }
-                    }
-//                    System.out.println("-----changeType=" + diff.getChangeType().name() + "----------新增的行数:" + addSize + "-------删减的行数:" + subSize
-//                        + " -----改变的路径:" + diff.getNewPath() + "------改变的文件数:" + diffs.size());
-                }
-                i++;
-                System.out.println("一共提交了" + i + "次;" + "------提交注释为:" + commit.getFullMessage() + "-----提交时间为:" + DateUtils.toString(commit.getAuthorIdent().getWhen())
-                    + "----提交人:" + commit.getAuthorIdent().getName());
-            }
+                        DiffFormatter df = new DiffFormatter(DisabledOutputStream.INSTANCE);
+                        df.setRepository(repository);
+                        //设置比较器忽略空白字符
+                        df.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
+                        df.setDetectRenames(true);
 
+                        List<DiffEntry> diffs = df.scan(parent.getTree(), commit.getTree());
+                        int addSizeCount = 0;
+                        int subSizeCount = 0;
+                        for (DiffEntry diff : diffs) {
+//                    df.format(diff);
+                            FileHeader fileHeader = df.toFileHeader(diff);
+                            List<? extends HunkHeader> hunks = fileHeader.getHunks();
+                            int addSize = 0;
+                            int subSize = 0;
+                            for (HunkHeader hunk : hunks) {
+                                EditList edits = hunk.toEditList();
+                                for (Edit edit : edits) {
+                                    addSize += edit.getEndB() - edit.getBeginB();
+                                    subSize += edit.getEndA() - edit.getBeginA();
+                                }
+                            }
+//                        System.out.println("-----changeType=" + diff.getChangeType().name() + "----------新增的行数:" + addSize + "-------删减的行数:" + subSize
+//                            + " -----改变的路径:" + diff.getNewPath() + "------改变的文件数:" + diffs.size());
+                            addSizeCount = addSize + addSizeCount;
+                            subSizeCount = subSize + subSizeCount;
+                        }
+                        i++;
+//                    System.out.println("一共提交了" + i + "次;" + "------提交注释为:" + commit.getFullMessage() + "-----提交时间为:" + DateUtils.toString(commit.getAuthorIdent().getWhen())
+//                        + "----提交人:" + commit.getAuthorIdent().getName());
+                        //列表map
+                        Map<String, Object> objectMap = new HashMap<>(16);
+                        //提交人
+                        objectMap.put("creteName", commit.getAuthorIdent().getName());
+                        //提交时间为
+                        objectMap.put("pushTime", DateUtils.toString(commit.getAuthorIdent().getWhen()));
+                        //提交时间 格式成月份
+                        objectMap.put("pushTimeGroup", DateUtils.getyyyy_mm_format().format(commit.getAuthorIdent().getWhen()));
+                        //提交注释为
+                        objectMap.put("annotation", commit.getFullMessage());
+                        //共提交次数
+                        objectMap.put("allCount", i);
+                        //新增的行数
+                        objectMap.put("added", addSizeCount);
+                        //删减的行数
+                        objectMap.put("removed", subSizeCount);
+                        //剩余的行数
+                        objectMap.put("total", addSizeCount - subSizeCount);
+                        mapArrayList.add(objectMap);
+                    }
+                }
+                //汇总map
+                Map<Object, Map<Object, List<Map<String, Object>>>> countResultGroup = mapArrayList.stream()
+                    .collect(groupingBy(s -> s.get("creteName"),
+                        groupingBy(s -> s.get("pushTimeGroup"))));
+                Map<Object, Map<Object, Map<String, Object>>> countResult = new HashMap<>();
+
+                countResultGroup.forEach((k, v) -> {
+                    Map<Object, Map<String, Object>> pushTimeGroupMap = new HashMap<>();
+                    v.forEach((k1, v1) -> {
+                        int allCount = v1.stream().mapToInt(s -> (int) s.get("allCount")).sum();
+                        int added = v1.stream().mapToInt(s -> (int) s.get("added")).sum();
+                        int removed = v1.stream().mapToInt(s -> (int) s.get("removed")).sum();
+                        int total = v1.stream().mapToInt(s -> (int) s.get("total")).sum();
+                        Map<String, Object> objectMap = new HashMap<>();
+                        objectMap.put("allCount", allCount);
+                        objectMap.put("added", added);
+                        objectMap.put("removed", removed);
+                        objectMap.put("total", total);
+                        pushTimeGroupMap.put(k1, objectMap);
+                    });
+                    countResult.put(k, pushTimeGroupMap);
+                });
+                map.put(date, countResult);
+            }
+            System.out.println(map);
         } catch (ParseException parseException) {
             parseException.printStackTrace();
         }
