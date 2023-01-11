@@ -39,14 +39,14 @@ public class CountLines {
             //这里是提交id,通过git log命令可以查看最近一次提交的commitId
             ObjectId commitId = repository.resolve("7ae236fe05b7cb67d12a3cf1302a8bb891f7dd07");
             revWalk.markStart(revWalk.parseCommit(commitId));
-            List<String> monthBetweenDate = getMonthBetweenDate("2022-12-01 00:00:00", "2022-12-30 23:59:59");
+            List<String> monthBetweenDate = getMonthBetweenDate("2022-11-01 00:00:00", "2022-12-30 23:59:59");
             int i = 0;
             Map<String, Object> map = new HashMap<>(16);
             for (String date : monthBetweenDate) {
                 List<Map<String, Object>> mapArrayList = new ArrayList<>();
+                String beginTime = DateUtils.getMonthOfMinDate(DateUtils.getyyyy_mm_dd_format().parse(date + "-01")) + " 00:00:00";
+                String endTime = DateUtils.getMonthOfMaxDate(DateUtils.getyyyy_mm_dd_format().parse(date + "-01")) + " 23:59:59";
                 for (RevCommit commit : revWalk) {
-                    String beginTime = DateUtils.getMonthOfMinDate(DateUtils.getyyyy_mm_dd_format().parse(date + "-01")) + " 00:00:00";
-                    String endTime = DateUtils.getMonthOfMaxDate(DateUtils.getyyyy_mm_dd_format().parse(date + "-01")) + " 23:59:59";
                     if (commit.getAuthorIdent().getWhen().getTime() >= DateUtils.toDate(beginTime).getTime() && commit.getAuthorIdent().getWhen().getTime() <= DateUtils.toDate(endTime).getTime()) {
                         RevCommit parent = null;
                         if (commit.getParent(0) != null) {
@@ -112,11 +112,13 @@ public class CountLines {
                     int added = v.stream().mapToInt(s -> (int) s.get("added")).sum();
                     int removed = v.stream().mapToInt(s -> (int) s.get("removed")).sum();
                     int total = v.stream().mapToInt(s -> (int) s.get("total")).sum();
-                    Map<String, Object> objectMap = new HashMap<>();
+                    Map<String, Object> objectMap = new HashMap<>(16);
                     objectMap.put("allCount", allCount);
                     objectMap.put("added", added);
                     objectMap.put("removed", removed);
                     objectMap.put("total", total);
+//                    objectMap.put("pushTime", v.stream().map(s -> s.get("pushTime")).collect(toList()));
+//                    objectMap.put("annotation", v.stream().map(s -> s.get("annotation")).collect(toList()));
                     countResult.put(k, objectMap);
                 });
                 map.put(date, countResult);
