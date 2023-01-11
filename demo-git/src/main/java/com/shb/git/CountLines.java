@@ -39,7 +39,6 @@ public class CountLines {
             //这里是提交id,通过git log命令可以查看最近一次提交的commitId
             ObjectId commitId = repository.resolve("7ae236fe05b7cb67d12a3cf1302a8bb891f7dd07");///Users/songhaibo/IdeaProjects/map-iot-middleground/
 //            ObjectId commitId = repository.resolve("af031d8f420d671ae7073268c0d37ca593c056a1");///Users/songhaibo/IdeaProjects/map-iot-access/
-
             revWalk.markStart(revWalk.parseCommit(commitId));
             int i = 0;
             Map<String, Object> map = new HashMap<>(16);
