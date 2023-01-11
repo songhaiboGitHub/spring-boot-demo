@@ -39,7 +39,7 @@ public class CountLines {
             //这里是提交id,通过git log命令可以查看最近一次提交的commitId
             ObjectId commitId = repository.resolve("7ae236fe05b7cb67d12a3cf1302a8bb891f7dd07");
             revWalk.markStart(revWalk.parseCommit(commitId));
-            List<String> monthBetweenDate = getMonthBetweenDate("2022-09-01 00:00:00", "2023-12-30 23:59:59");
+            List<String> monthBetweenDate = getMonthBetweenDate("2022-12-01 00:00:00", "2022-12-30 23:59:59");
             int i = 0;
             Map<String, Object> map = new HashMap<>(16);
             for (String date : monthBetweenDate) {
@@ -103,27 +103,21 @@ public class CountLines {
                         mapArrayList.add(objectMap);
                     }
                 }
-                //汇总map
-                Map<Object, Map<Object, List<Map<String, Object>>>> countResultGroup = mapArrayList.stream()
-                    .collect(groupingBy(s -> s.get("creteName"),
-                        groupingBy(s -> s.get("pushTimeGroup"))));
-                Map<Object, Map<Object, Map<String, Object>>> countResult = new HashMap<>();
-
-                countResultGroup.forEach((k, v) -> {
-                    Map<Object, Map<String, Object>> pushTimeGroupMap = new HashMap<>();
-                    v.forEach((k1, v1) -> {
-                        int allCount = v1.stream().mapToInt(s -> (int) s.get("allCount")).sum();
-                        int added = v1.stream().mapToInt(s -> (int) s.get("added")).sum();
-                        int removed = v1.stream().mapToInt(s -> (int) s.get("removed")).sum();
-                        int total = v1.stream().mapToInt(s -> (int) s.get("total")).sum();
-                        Map<String, Object> objectMap = new HashMap<>();
-                        objectMap.put("allCount", allCount);
-                        objectMap.put("added", added);
-                        objectMap.put("removed", removed);
-                        objectMap.put("total", total);
-                        pushTimeGroupMap.put(k1, objectMap);
-                    });
-                    countResult.put(k, pushTimeGroupMap);
+                //月汇总map
+                Map<Object, List<Map<String, Object>>> creteNameGroup = mapArrayList.stream()
+                    .collect(groupingBy(s -> s.get("creteName")));
+                Map<Object, Map<String, Object>> countResult = new HashMap<>();
+                creteNameGroup.forEach((k, v) -> {
+                    int allCount = v.stream().mapToInt(s -> (int) s.get("allCount")).sum();
+                    int added = v.stream().mapToInt(s -> (int) s.get("added")).sum();
+                    int removed = v.stream().mapToInt(s -> (int) s.get("removed")).sum();
+                    int total = v.stream().mapToInt(s -> (int) s.get("total")).sum();
+                    Map<String, Object> objectMap = new HashMap<>();
+                    objectMap.put("allCount", allCount);
+                    objectMap.put("added", added);
+                    objectMap.put("removed", removed);
+                    objectMap.put("total", total);
+                    countResult.put(k, objectMap);
                 });
                 map.put(date, countResult);
             }
